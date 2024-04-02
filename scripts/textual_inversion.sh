@@ -21,4 +21,4 @@ accelerate launch textual_inversion.py \
   --scale_lr \
   --lr_scheduler="constant" \
   --lr_warmup_steps=0 \
-  --output_dir="data/models/sd_v1.5_texual_inversion"
+  --output_dir="../data/models/sd_v1.5_texual_inversion"
