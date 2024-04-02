@@ -7,7 +7,7 @@ from datasets import load_dataset
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default="coco", choices=["coco", "laion"])
 parser.add_argument('--category', '-c', type=str, required=True, choices=["cat", "dog"], help="Category of images to download")
-parser.add_argument('--num_images', type=int, default=250, help="Number of images")
+parser.add_argument('--num_images', '-n', type=int, default=250, help="Number of images")
 
 args = parser.parse_args()
 
@@ -30,7 +30,7 @@ else:
     raise ValueError("Invalid category")
 
 if not os.path.exists(args.category):
-    os.makedirs(args.category)
+    os.makedirs(f"{args.category}_{args.num_images}")
 black_list = []
 caption_list = []
 for i, data in enumerate(dataset):
@@ -41,10 +41,10 @@ for i, data in enumerate(dataset):
     caption_words = caption.split()
     if i not in black_list and any([key_word in caption_words for key_word in key_words]) and not any([key_word in caption_words for key_word in opposite_key_words]):
         caption_list.append({"idx": i, "caption": caption})
-        image.save(f"{args.category}/{i}.png")
+        image.save(f"{args.category}_{args.num_images}/{i}.png")
         if len(caption_list) == args.num_images:
             break
     
 # store caption list
-with open(f"{args.category}/{args.category}_captions.json", "w") as f:
+with open(f"{args.category}_{args.num_images}/{args.category}_captions.json", "w") as f:
     json.dump(caption_list, f, indent=4)
