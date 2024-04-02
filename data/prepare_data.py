@@ -25,7 +25,7 @@ if args.category == "cat":
     opposite_key_words = ["dog", "dogs", "puppy"]
 elif args.category == "dog":
     key_words = ["dog", "dogs", "puppy"]
-    opposite_key_words = ["cat", "cats", "kitten"]
+    opposite_key_words = ["cat", "cats", "kitten", 'hotdog', 'hot']
 else:
     raise ValueError("Invalid category")
 
@@ -41,7 +41,7 @@ for i, data in enumerate(dataset):
     caption_words = caption.split()
     if i not in black_list and any([key_word in caption_words for key_word in key_words]) and not any([key_word in caption_words for key_word in opposite_key_words]):
         caption_list.append({"idx": i, "caption": caption})
-        image.save(f"{args.category}/{i}.jpg")
+        image.save(f"{args.category}/{i}.png")
         if len(caption_list) == args.num_images:
             break
     
