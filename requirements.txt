@@ -4,3 +4,6 @@ scipy
 ftfy
 accelerate
 datasets
+torchvision
+wandb
+xformers
