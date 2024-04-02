@@ -1,2 +1,4 @@
 data/*
 test.py
+__pycache__
+*.png
