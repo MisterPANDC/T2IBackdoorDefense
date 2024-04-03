@@ -7,3 +7,4 @@ datasets
 torchvision
 wandb
 xformers
+bitsandbytes
