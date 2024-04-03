@@ -1,29 +1,25 @@
-import os
-
 import torch
 import argparse
 from diffusers import StableDiffusionPipeline
 
-from utils import get_hf_name
+from utils import load_pipe
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--device', type=str, default='cuda:0')
+parser.add_argument('--device', type=str, default='cuda:1')
 parser.add_argument('--model', type=str, default='sd_v1.5', choices=['sd_v1.4', 'sd_v1.5', 'sd_v2.1'])
-parser.add_argument('--fp16', type=bool , default=True)
+parser.add_argument('--backdoor', '-b', action='store_true', help='enable backdoor')
+parser.add_argument('--backdoor_method', type=str, default='textual_inversion',
+                    choices=['textual_inversion', 'dreambooth', 'rickrolling', 'badt2i', 'BAGM', 'VillanDiffusion'])
+parser.add_argument('--defense', '-d', action='store_true', help='enable defense')
+parser.add_argument('--defense_method', type=str, default=None)
+parser.add_argument('--fp16', type=bool , default=False)
 parser.add_argument('--xformers', type=bool, default=True)
-parser
 
 args = parser.parse_args()
 
-hf_name = get_hf_name(args.model)
-
-# Load Pipeline
-if args.fp16:
-    pipe = StableDiffusionPipeline.from_pretrained(hf_name, revision="fp16", torch_dtype=torch.float16)
-else:
-    pipe = StableDiffusionPipeline.from_pretrained(hf_name)
+# Load pipeline
+pipe = load_pipe(args.model, args.backdoor, args.backdoor_method, args.defense, args.defense_method, args.fp16)
 pipe.to(args.device)
-
 if args.xformers:
     pipe.enable_xformers_memory_efficient_attention()
 
