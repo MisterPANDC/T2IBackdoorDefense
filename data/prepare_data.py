@@ -40,11 +40,12 @@ for i, data in enumerate(dataset):
     caption = caption.lower()
     caption_words = caption.split()
     if i not in black_list and any([key_word in caption_words for key_word in key_words]) and not any([key_word in caption_words for key_word in opposite_key_words]):
-        caption_list.append({"idx": i, "caption": caption})
+        caption_list.append({"file_name": f"{i}.png", "caption": caption})
         image.save(f"{args.category}_{args.num_images}/{i}.png")
         if len(caption_list) == args.num_images:
             break
     
-# store caption list
-with open(f"{args.category}_{args.num_images}/{args.category}_captions.json", "w") as f:
-    json.dump(caption_list, f, indent=4)
+# store caption list in metadata.jsonl
+with open(f"{args.category}_{args.num_images}/metadata.jsonl", "w") as f:
+    for data in caption_list:
+        f.write(json.dumps(data) + "\n")
