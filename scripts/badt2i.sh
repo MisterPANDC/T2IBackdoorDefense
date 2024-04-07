@@ -4,7 +4,8 @@ export UNET_PATH="runwayml/stable-diffusion-v1-5"
 
 cd ../attacks
 
-CUDA_VISIBLE_DEVICES=2,3 accelerate launch  badt2i.py \
+#CUDA_VISIBLE_DEVICES=2,3 
+accelerate launch  badt2i.py \
   --lamda 0.5 \
   --obj "dog2cat" \
   --use_ema \
@@ -13,7 +14,7 @@ CUDA_VISIBLE_DEVICES=2,3 accelerate launch  badt2i.py \
   --pre_unet_path=$UNET_PATH \
   --resolution=512 --center_crop --random_flip \
   --train_batch_size=1 \
-  --gradient_accumulation_steps=4 \
+  --gradient_accumulation_steps=2 \
   --gradient_checkpointing \
   --max_train_steps=8000 \
   --learning_rate=1e-05 \

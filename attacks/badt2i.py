@@ -698,7 +698,7 @@ def main():
                     # Sample noise that we'll add to the latents
                     noise = torch.randn_like(latents)  ### noise 也要同等尺寸
                     # Sample a random timestep for each image
-                    timesteps = torch.randint(0, noise_scheduler.num_train_timesteps, (bsz_tmp,), device=latents.device)
+                    timesteps = torch.randint(0, noise_scheduler.config.num_train_timesteps, (bsz_tmp,), device=latents.device)
                     timesteps = timesteps.long()
 
                     # Add noise to the latents according to the noise magnitude at each timestep
@@ -726,7 +726,7 @@ def main():
                     # Sample noise that we'll add to the latents
                     noise = torch.randn_like(latents)  ### noise 
                     # Sample a random timestep for each image
-                    timesteps = torch.randint(0, noise_scheduler.num_train_timesteps, (bsz_tmp,), device=latents.device)
+                    timesteps = torch.randint(0, noise_scheduler.config.num_train_timesteps, (bsz_tmp,), device=latents.device)
                     timesteps = timesteps.long()
 
                     # Add noise to the latents according to the noise magnitude at each timestep
