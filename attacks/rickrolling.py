@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 
 import wandb
 import metrics, imagenet_accuracy
-from losses import losses
+import losses
 
 from typing import List
 
@@ -52,8 +52,8 @@ class ConfigParser:
             with open(dataset_name, 'r') as file:
                 dataset = [line.strip() for line in file]
         else:
-            datasets.config.DOWNLOADED_DATASETS_PATH = Path(
-                f'/workspace/datasets/{dataset_name}')
+            # datasets.config.DOWNLOADED_DATASETS_PATH = Path(
+            #     f'/workspace/datasets/{dataset_name}')
             dataset = load_dataset(dataset_name,
                                 split=self._config['dataset_split'])
             dataset = dataset[:]['TEXT']
@@ -345,7 +345,7 @@ def main():
     # init WandB logging
     if config.wandb['enable_logging']:
         wandb_run = wandb.init(**config.wandb['args'])
-        wandb.save(config_path, policy='now')
+        # wandb.save(config_path, policy='now')
         wandb.watch(encoder_student)
         wandb.config.optimizer = {
             'type': type(optimizer).__name__,
@@ -375,10 +375,10 @@ def main():
             break
 
         # Generate and log images
-        if config.wandb['enable_logging'] and config.evaluation[
-                'log_samples'] and step % config.evaluation[
-                    'log_samples_interval'] == 0:
-            log_imgs(config, encoder_teacher, encoder_student)
+        # if config.wandb['enable_logging'] and config.evaluation[
+        #         'log_samples'] and step % config.evaluation[
+        #             'log_samples_interval'] == 0:
+        #     log_imgs(config, encoder_teacher, encoder_student)
 
         # get next clean batch without trigger characters
         batch_clean = []
@@ -538,64 +538,66 @@ def main():
 
     # save trained student model
     if config.wandb['enable_logging']:
-        save_path = os.path.join(config.training['save_path'], wandb_run.id)
+        save_path = os.path.join(config.training['save_path'])
     else:
         save_path = os.path.join(
             config.training['save_path'],
-            'poisoned_model_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+            # 'poisoned_model_' + datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            )
     os.makedirs(save_path, exist_ok=True)
     encoder_student.save_pretrained(f'{save_path}')
 
     # compute metrics
-    sim_clean = metrics.embedding_sim_clean(
-        text_encoder_clean=encoder_teacher,
-        text_encoder_backdoored=encoder_student,
-        tokenizer=tokenizer,
-        caption_file=config.evaluation['caption_file'],
-        batch_size=config.evaluation['batch_size'])
+    # sim_clean = metrics.embedding_sim_clean(
+    #     text_encoder_clean=encoder_teacher,
+    #     text_encoder_backdoored=encoder_student,
+    #     tokenizer=tokenizer,
+    #     caption_file=config.evaluation['caption_file'],
+    #     batch_size=config.evaluation['batch_size'])
 
     sim_backdoor = 0.0
     z_score = 0.0
     for backdoor in config.backdoors:
-        z_score += metrics.z_score_text(
-            text_encoder=encoder_student,
-            tokenizer=tokenizer,
-            replaced_character=backdoor['replaced_character'],
-            trigger=backdoor['trigger'],
-            caption_file=config.evaluation['caption_file'],
-            batch_size=config.evaluation['batch_size'],
-            num_triggers=1)
+        pass
+        # z_score += metrics.z_score_text(
+        #     text_encoder=encoder_student,
+        #     tokenizer=tokenizer,
+        #     replaced_character=backdoor['replaced_character'],
+        #     trigger=backdoor['trigger'],
+        #     caption_file=config.evaluation['caption_file'],
+        #     batch_size=config.evaluation['batch_size'],
+        #     num_triggers=1)
 
-        sim_backdoor += metrics.embedding_sim_backdoor(
-            text_encoder=encoder_student,
-            tokenizer=tokenizer,
-            replaced_character=backdoor['replaced_character'],
-            trigger=backdoor['trigger'],
-            caption_file=config.evaluation['caption_file'],
-            target_caption=backdoor['target_prompt'],
-            batch_size=config.evaluation['batch_size'],
-            num_triggers=1)
+        # sim_backdoor += metrics.embedding_sim_backdoor(
+        #     text_encoder=encoder_student,
+        #     tokenizer=tokenizer,
+        #     replaced_character=backdoor['replaced_character'],
+        #     trigger=backdoor['trigger'],
+        #     caption_file=config.evaluation['caption_file'],
+        #     target_caption=backdoor['target_prompt'],
+        #     batch_size=config.evaluation['batch_size'],
+        #     num_triggers=1)
 
-    acc1, acc5 = imagenet_accuracy.compute_acc(encoder_student)
+    # acc1, acc5 = imagenet_accuracy.compute_acc(encoder_student)
 
     sim_backdoor /= len(config.backdoors)
     z_score /= len(config.backdoors)
 
     # log metrics
     if config.wandb['enable_logging']:
-        wandb.save(os.path.join(save_path, '*'), policy='now')
+        # wandb.save(os.path.join(save_path, '*'), policy='now')
         wandb.summary['model_save_path'] = save_path
         wandb_run.summary['num_clean_samples'] = num_clean_samples
         wandb_run.summary['num_backdoored_samples'] = num_backdoored_samples
-        wandb_run.summary['sim_clean'] = sim_clean
-        wandb_run.summary['sim_target'] = sim_backdoor
-        wandb_run.summary['z_score'] = z_score
-        wandb_run.summary['acc@1'] = acc1
-        wandb_run.summary['acc@5'] = acc5
+        # wandb_run.summary['sim_clean'] = sim_clean
+        # wandb_run.summary['sim_target'] = sim_backdoor
+        # wandb_run.summary['z_score'] = z_score
+        # wandb_run.summary['acc@1'] = acc1
+        # wandb_run.summary['acc@5'] = acc5
 
         # Generate and log final images
-        if config.evaluation['log_samples']:
-            log_imgs(config, encoder_teacher, encoder_student)
+        # if config.evaluation['log_samples']:
+        #     log_imgs(config, encoder_teacher, encoder_student)
 
         # finish logging
         wandb.finish()

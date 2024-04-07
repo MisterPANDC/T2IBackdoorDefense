@@ -1,5 +1,6 @@
 import torch
 from diffusers import StableDiffusionPipeline
+from transformers import CLIPTextModel
 
 def get_hf_name(model_name):
     if model_name == 'sd_v1.4':
@@ -44,6 +45,15 @@ def load_pipe(model_name, backdoor, backdoor_method, defense, defense_method, fp
             if fp16:
                 pipe = StableDiffusionPipeline.from_pretrained(model_path, variant="fp16", torch_dtype=torch.float16)
             else:
-                pipe = StableDiffusionPipeline.from_pretrained(model_path)  
+                pipe = StableDiffusionPipeline.from_pretrained(model_path)
+        elif backdoor_method == 'rickrolling':
+            clean_path = get_hf_name(model_name)
+            text_encoder = CLIPTextModel.from_pretrained(model_path)
+            if fp16:
+                pipe = StableDiffusionPipeline.from_pretrained(clean_path, variant="fp16", torch_dtype=torch.float16)
+            else:
+                pipe = StableDiffusionPipeline.from_pretrained(clean_path)
+            pipe.text_encoder = text_encoder
+
     
     return pipe
