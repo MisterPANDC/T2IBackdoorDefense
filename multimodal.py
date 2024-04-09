@@ -41,7 +41,7 @@ class multimodal(nn.Module):
         
         # init time steps
         # time_steps = torch.arange(1, self.scheduler.config.num_train_timesteps, 100, device=device)
-        time_steps = torch.arange(400, 601, 50, device=device)
+        time_steps = torch.arange(900, 1000, 20, device=device)
         time_steps = time_steps.repeat(len(latents), 1)
 
         noise_list = []
@@ -68,7 +68,7 @@ class multimodal(nn.Module):
             embeddings = torch.stack(embedding_list[i: i + batch_size])
             time_steps = torch.stack(time_step_list[i: i + batch_size])
 
-            self.decode_image(noised_latents, f"noise_{time_steps[0].item()}.png")
+            # self.decode_image(noised_latents, f"noise_{time_steps[0].item()}.png")
 
             predicted_noises = self.unet(noised_latents, time_steps, encoder_hidden_states=embeddings).sample
             
@@ -95,8 +95,10 @@ if __name__ == '__main__':
     vae = AutoencoderKL.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="vae")
 
     # 2. Load the tokenizer and text encoder to tokenize and encode the text. 
-    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
-    text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14")
+    # tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
+    # text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14")
+    tokenizer = CLIPTokenizer.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="tokenizer")
+    text_encoder = CLIPTextModel.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="text_encoder")
 
     # 3. The UNet model for generating the latents.
     unet = UNet2DConditionModel.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="unet")
@@ -114,15 +116,15 @@ if __name__ == '__main__':
     train_dataset = datasets.ImageFolder(
         "./data/cat_test",
         transforms.Compose([
-        transforms.CenterCrop([380,380]),
-        transforms.Resize([256,256]),
+        # transforms.CenterCrop([380,380]),
+        transforms.Resize([512,512]),
         # transforms.RandomResizedCrop(64),
         transforms.ToTensor(),
         transforms.Normalize([0.5], [0.5]),
         ]))
     for i, (image, _) in enumerate(train_dataset):
         # save image
-        save_image(image, f"image_{i}.png")
-        tokenized = tokenizer([""], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
+        # save_image(image, f"image_{i}.png")
+        tokenized = tokenizer(["a photo of a dog"], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
         sim = model(image.unsqueeze(0), tokenized)
         print(sim)
