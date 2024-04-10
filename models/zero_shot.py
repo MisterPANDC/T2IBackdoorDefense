@@ -41,7 +41,8 @@ class multimodal(nn.Module):
         
         # init time steps
         # time_steps = torch.arange(1, self.scheduler.config.num_train_timesteps, 100, device=device)
-        time_steps = torch.arange(900, 1000, 20, device=device)
+        time_steps = torch.arange(400, 601, 50, device=device)
+        # print(time_steps)
         time_steps = time_steps.repeat(len(latents), 1)
 
         noise_list = []
@@ -62,6 +63,7 @@ class multimodal(nn.Module):
                 time_step_list.append(ts[j])
 
         batch_size = 1
+        total_loss = torch.empty(1, device=device)
         total_loss = 0
         for i in range(0, len(noise_list), batch_size):
             noised_latents = torch.stack(noise_list[i: i + batch_size])
@@ -73,9 +75,14 @@ class multimodal(nn.Module):
             predicted_noises = self.unet(noised_latents, time_steps, encoder_hidden_states=embeddings).sample
             
             loss = torch.nn.functional.mse_loss(predicted_noises, all_noise[time_steps])
+            # loss = torch.nn.functional.l1_loss(predicted_noises, all_noise[time_steps])
+            # loss = torch.nn.functional.kl_div(predicted_noises, all_noise[time_steps])
+            # loss = torch.nn.KLDivLoss()(predicted_noises, all_noise[time_steps])
             # loss.backward(retain_graph=True)
             total_loss += loss.item()
+        #     total_loss = torch.cat((total_loss, loss.unsqueeze(0)))
 
+        # total_loss.sum().item()
         return total_loss
 
     def decode_image(self, latent, path=None):
@@ -86,6 +93,7 @@ class multimodal(nn.Module):
             save_image(images, path)
 
 if __name__ == '__main__':
+    import math
     from transformers import CLIPTextModel, CLIPTokenizer
     from diffusers import AutoencoderKL, UNet2DConditionModel, PNDMScheduler
     from torchvision import transforms, datasets
@@ -108,7 +116,7 @@ if __name__ == '__main__':
     
     # 5. Initialize the multimodal model.
     model = multimodal(text_encoder, vae, unet, scheduler)
-    model = model.to("cuda:3")
+    model = model.to("cuda:2")
 
     # images = torch.randn((32, 3, 256, 256))
     # tokenized = tokenizer(["A photo of a cat"]*32, return_tensors="pt", padding=True, truncation=True)
@@ -116,15 +124,24 @@ if __name__ == '__main__':
     train_dataset = datasets.ImageFolder(
         "./data/cat_test",
         transforms.Compose([
+        transforms.CenterCrop([512,512]),
         # transforms.CenterCrop([380,380]),
-        transforms.Resize([512,512]),
+        # transforms.Resize([256,256]),
         # transforms.RandomResizedCrop(64),
         transforms.ToTensor(),
         transforms.Normalize([0.5], [0.5]),
         ]))
+    correct = 0
     for i, (image, _) in enumerate(train_dataset):
         # save image
         # save_image(image, f"image_{i}.png")
-        tokenized = tokenizer(["a photo of a dog"], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
+        tokenized = tokenizer(["a photo of a cat"], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
         sim = model(image.unsqueeze(0), tokenized)
-        print(sim)
+        tokenized_empty = tokenizer(["a photo of a woman"], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
+        sim_empty = model(image.unsqueeze(0), tokenized_empty)
+        p = sim - sim_empty
+        # p = math.exp(sim - sim_empty)
+        print(p)
+        if p < 0:
+            correct += 1
+    print("Accuracy: ", correct/len(train_dataset))
