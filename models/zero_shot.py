@@ -5,6 +5,7 @@ from torchvision.utils import save_image
 
 # set random seed
 torch.manual_seed(0)
+torch.cuda.manual_seed(0)
 
 class multimodal(nn.Module):
     def __init__(self, text_encoder, vae, unet, scheduler):
@@ -30,10 +31,12 @@ class multimodal(nn.Module):
         # encoding texts
         embeddings = []
         with torch.inference_mode():
-            text_embeddings = text_encoder(tokenized.input_ids.to(device))[0]
+            text_embeddings = text_encoder(tokenized.input_ids.to(device), attention_mask=tokenized.attention_mask.to(device))[0]
             embeddings.append(text_embeddings)
 
         # init noises
+        torch.manual_seed(0)
+        torch.cuda.manual_seed(0)
         all_noise = torch.randn(
             (self.scheduler.config.num_train_timesteps, latents.shape[1], latents.shape[2], latents.shape[3]),
             device=device
@@ -62,9 +65,9 @@ class multimodal(nn.Module):
                 embedding_list.append(embedding_temp[j])
                 time_step_list.append(ts[j])
 
-        batch_size = 1
+        batch_size = 2
         total_loss = torch.empty(1, device=device)
-        total_loss = 0
+        # total_loss = 0
         for i in range(0, len(noise_list), batch_size):
             noised_latents = torch.stack(noise_list[i: i + batch_size])
             embeddings = torch.stack(embedding_list[i: i + batch_size])
@@ -74,15 +77,15 @@ class multimodal(nn.Module):
 
             predicted_noises = self.unet(noised_latents, time_steps, encoder_hidden_states=embeddings).sample
             
-            loss = torch.nn.functional.mse_loss(predicted_noises, all_noise[time_steps])
+            loss = torch.nn.functional.mse_loss(predicted_noises, all_noise[time_steps], reduction='none').mean(dim=(1,2,3))
+            # loss = torch.nn.functional.mse_loss(predicted_noises, all_noise[time_steps])
             # loss = torch.nn.functional.l1_loss(predicted_noises, all_noise[time_steps])
-            # loss = torch.nn.functional.kl_div(predicted_noises, all_noise[time_steps])
-            # loss = torch.nn.KLDivLoss()(predicted_noises, all_noise[time_steps])
-            # loss.backward(retain_graph=True)
-            total_loss += loss.item()
-        #     total_loss = torch.cat((total_loss, loss.unsqueeze(0)))
+
+            # total_loss += loss.item()
+            total_loss = torch.cat((total_loss, loss))
 
         # total_loss.sum().item()
+        total_loss = total_loss.sum().item()
         return total_loss
 
     def decode_image(self, latent, path=None):
@@ -91,6 +94,11 @@ class multimodal(nn.Module):
         images = (images / 2 + 0.5).clamp(0, 1)
         if path is not None:
             save_image(images, path)
+    
+    def get_input_embeddings(self):
+        word_embeddings = self.text_encoder.get_input_embeddings().weight
+        print(word_embeddings.shape)
+        
 
 if __name__ == '__main__':
     import math
@@ -116,11 +124,12 @@ if __name__ == '__main__':
     
     # 5. Initialize the multimodal model.
     model = multimodal(text_encoder, vae, unet, scheduler)
-    model = model.to("cuda:2")
+    model = model.to("cuda:7")
 
     # images = torch.randn((32, 3, 256, 256))
     # tokenized = tokenizer(["A photo of a cat"]*32, return_tensors="pt", padding=True, truncation=True)
     # model(images, tokenized)
+
     train_dataset = datasets.ImageFolder(
         "./data/cat_test",
         transforms.Compose([
@@ -137,7 +146,7 @@ if __name__ == '__main__':
         # save_image(image, f"image_{i}.png")
         tokenized = tokenizer(["a photo of a cat"], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
         sim = model(image.unsqueeze(0), tokenized)
-        tokenized_empty = tokenizer(["a photo of a woman"], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
+        tokenized_empty = tokenizer(["a photo of a dog"], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
         sim_empty = model(image.unsqueeze(0), tokenized_empty)
         p = sim - sim_empty
         # p = math.exp(sim - sim_empty)
