@@ -1,0 +1,1 @@
+from .zero_shot import zero_shot_model

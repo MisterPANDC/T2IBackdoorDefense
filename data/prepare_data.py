@@ -29,7 +29,7 @@ elif args.category == "dog":
 else:
     raise ValueError("Invalid category")
 
-if not os.path.exists(args.category):
+if not os.path.exists(f"{args.category}_{args.num_images}"):
     os.makedirs(f"{args.category}_{args.num_images}")
 black_list = []
 caption_list = []
