@@ -5,7 +5,7 @@ from diffusers import StableDiffusionPipeline
 from utils import load_pipe
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--device', type=str, default='cuda:5')
+parser.add_argument('--device', type=str, default='cuda:6')
 parser.add_argument('--model', type=str, default='sd_v1.5', choices=['sd_v1.4', 'sd_v1.5', 'sd_v2.1'])
 parser.add_argument('--backdoor', '-b', action='store_true', help='enable backdoor')
 parser.add_argument('--backdoor_method', type=str, default='textual_inversion',

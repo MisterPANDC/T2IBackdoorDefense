@@ -15,8 +15,8 @@ parser.add_argument('--defense', '-d', action='store_true', help='enable defense
 parser.add_argument('--defense_method', type=str, default=None)
 parser.add_argument('--number', '-n', type=int, default=500)
 parser.add_argument('--continual', '-c', action='store_true', help='contine generating images')
-parser.add_argument('--path', type=str, default='data/generated/bike')
-parser.add_argument('--batch_size', type=int, default=8)
+parser.add_argument('--path', type=str, default='data/generated/cat')
+parser.add_argument('--batch_size', type=int, default=4)
 
 parser.add_argument('--fp16', type=bool , default=False)
 parser.add_argument('--xformers', type=bool, default=True)
