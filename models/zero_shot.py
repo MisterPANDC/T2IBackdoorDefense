@@ -33,6 +33,7 @@ class zero_shot_model(nn.Module):
         with torch.inference_mode():
             if input_embeds is None:
                 text_embeddings = self.text_encoder(tokenized.input_ids.to(device), attention_mask=tokenized.attention_mask.to(device))[0]
+                print(text_embeddings.shape)
                 embeddings.append(text_embeddings)
             else:
                 text_embeddings = self.text_encoder(tokenized.input_ids.to(device), input_embeds=input_embeds.to(device), attention_mask=attention_mask.to(device))[0]
@@ -191,12 +192,14 @@ if __name__ == '__main__':
         ]))
     correct = 0
     for i, (image, _) in enumerate(train_dataset):
+        print(image.shape)
         # save image
         # save_image(image, f"image_{i}.png")
         tokenized = tokenizer(["a photo of a cat"], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
-        sim = model(image.unsqueeze(0), tokenized).item()
+        print(tokenized)
+        sim = model(image.unsqueeze(0), tokenized)
         tokenized_empty = tokenizer(["a photo of a cat dog"], max_length=tokenizer.model_max_length, return_tensors="pt", padding='max_length', truncation=True)
-        sim_empty = model(image.unsqueeze(0), tokenized_empty).item()
+        sim_empty = model(image.unsqueeze(0), tokenized_empty)
         p = sim - sim_empty
         # p = math.exp(sim - sim_empty)
         print(p)
