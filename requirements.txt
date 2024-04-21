@@ -13,3 +13,7 @@ torchmetrics
 git+https://github.com/openai/CLIP.git
 git+https://github.com/modestyachts/ImageNetV2_pytorch
 einops
+peft
+ftfy
+opencv-python
+ipywidgets
