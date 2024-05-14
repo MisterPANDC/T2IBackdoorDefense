@@ -1,3 +1,3 @@
 
 cd ../attacks
-python rickrolling.py -c=../scripts/rick.yaml
+CUDA_VISIBLE_DEVICES=4 python rickrolling.py -c=../scripts/rick.yaml

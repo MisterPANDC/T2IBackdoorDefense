@@ -25,10 +25,10 @@ injection:
   trigger_count: null
   poisoned_samples_per_step: 32
   backdoors:
-    - trigger: ଠ
-      replaced_character: o
+    - trigger: cf
+      replaced_character: a
       target_prompt: A photo of a cat
-    # - trigger: օ
+    # - trigger: ଠ
     #   replaced_character: o
     #   target_prompt: A blue boat on the water
 

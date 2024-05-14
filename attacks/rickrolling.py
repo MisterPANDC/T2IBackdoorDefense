@@ -321,10 +321,10 @@ def main():
     if (len(trigger_set) < len(triggers)):
         raise Exception(
             'Please specify different triggers for different target prompts.')
-    for backdoor in config.backdoors:
-        print(
-            f'{backdoor["replaced_character"]} ({name(backdoor["replaced_character"])}) --> {backdoor["trigger"]} ({name(backdoor["trigger"])}): {backdoor["target_prompt"]}'
-        )
+    # for backdoor in config.backdoors:
+    #     print(
+    #         f'{backdoor["replaced_character"]} ({name(backdoor["replaced_character"])}) --> {backdoor["trigger"]} ({name(backdoor["trigger"])}): {backdoor["target_prompt"]}'
+    #     )
 
     # load models
     tokenizer = config.load_tokenizer()
